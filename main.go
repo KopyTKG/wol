@@ -17,7 +17,6 @@ func getAddrMask(intf string) (ip []int, mask []int) {
 
 	ip = make([]int, 4)
 	mask = make([]int, 4)
-
 	ief, err := net.InterfaceByName(intf)
 	if err != nil { // get interface
 		log.Fatalln("Error while getting interface")
@@ -47,8 +46,8 @@ func getAddrMask(intf string) (ip []int, mask []int) {
 	for i := range len(sIp) {
 		ip[i], err = strconv.Atoi(sIp[i])
 		if err != nil {
-		log.Fatalln("Error while converting string to number")
-		os.Exit(1)
+			log.Fatalln("Error while converting string to number")
+			os.Exit(1)
 		}
 
 	}
@@ -176,9 +175,11 @@ func wol(intf, sMac *string) {
 
 	host := join(brd, ".")
 
+	fmt.Println(host)
+
 	Baddr := net.UDPAddr{
 		Port: 40000,
-		IP:   net.ParseIP(host),
+		IP:   net.ParseIP("239.255.255.255"),
 	}
 	conn, err := net.DialUDP("udp", nil, &Baddr)
 	if err != nil {
@@ -193,5 +194,5 @@ func wol(intf, sMac *string) {
 		return
 	}
 
-	conn.Close() 
+	conn.Close()
 }
