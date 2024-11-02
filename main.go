@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
-	"math"
 	"net"
 	"os"
 	"strconv"
@@ -12,79 +11,6 @@ import (
 
 	"thekrew.app/WoL/help"
 )
-
-func getAddrMask(intf string) (ip []int, mask []int) {
-
-	ip = make([]int, 4)
-	mask = make([]int, 4)
-	ief, err := net.InterfaceByName(intf)
-	if err != nil { // get interface
-		log.Fatalln("Error while getting interface")
-		os.Exit(1)
-	}
-	addrs, err := ief.Addrs()
-	if err != nil { // get addresses
-		log.Fatalln("Error while getting addresses")
-		os.Exit(1)
-	}
-
-	first := ""
-
-	for _, addr := range addrs {
-		if strings.Contains(addr.String(), ".") {
-			first = addr.String()
-			break
-		}
-	}
-
-	slices := strings.Split(first, "/")
-	sIp := strings.Split(slices[0], ".")
-	iMask, err := strconv.Atoi(slices[1])
-	if err != nil {
-		os.Exit(1)
-	}
-	for i := range len(sIp) {
-		ip[i], err = strconv.Atoi(sIp[i])
-		if err != nil {
-			log.Fatalln("Error while converting string to number")
-			os.Exit(1)
-		}
-
-	}
-	if iMask == 0 {
-		log.Fatalln("invalid mask")
-		os.Exit(1)
-	}
-	left := iMask
-
-	for i := 0; i < iMask; i += 8 {
-		left -= 8
-		mask[i/8] = 255
-	}
-
-	if left > 0 {
-		mask[3] = int(math.Pow(2, float64(left)))
-	}
-
-	return ip, mask
-}
-
-func getBroadcast(ip []int, mask []int) (brd []int) {
-	brd = make([]int, 4)
-
-	full := []int{255, 255, 255, 255}
-	inv := make([]int, 4)
-
-	for i := range len(full) {
-		inv[i] = full[i] - mask[i]
-	}
-
-	for i := range len(ip) {
-		brd[i] = ip[i] | inv[i]
-	}
-
-	return brd
-}
 
 func assemble(mac []byte) []byte {
 	l := 102
@@ -110,30 +36,25 @@ func join(arr []int, el string) (item string) {
 
 func main() {
 	args := os.Args[1:]
-	intf, sMac := "", ""
+	sMac := ""
 
 	if len(args) < 1 {
 		help.PrintHelp()
 		os.Exit(0)
 	}
 
-	processArguments(args, &intf, &sMac)
-	wol(&intf, &sMac)
+	processArguments(args, &sMac)
+	wol(&sMac)
 
 }
 
-func processArguments(args []string, intf, sMac *string) {
+func processArguments(args []string, sMac *string) {
 	prev := ""
 	for _, arg := range args {
 		switch {
-		case arg == "-i" || arg == "--interface":
-			prev = arg
 		case arg == "-m" || arg == "--mac":
 			prev = arg
 
-		case prev == "-i" || prev == "--interface":
-			prev = ""
-			*intf = arg
 		case prev == "-m" || prev == "--mac":
 			prev = ""
 			*sMac = arg
@@ -152,7 +73,7 @@ func processArguments(args []string, intf, sMac *string) {
 	}
 }
 
-func wol(intf, sMac *string) {
+func wol(sMac *string) {
 	slMac := strings.Split((*sMac), ":")
 	mac := make([]byte, 6)
 
@@ -170,16 +91,10 @@ func wol(intf, sMac *string) {
 		mac[i] = b[0]
 	}
 
-	ip, mask := getAddrMask(*intf)
-	brd := getBroadcast(ip, mask)
-
-	host := join(brd, ".")
-
-	fmt.Println(host)
 
 	Baddr := net.UDPAddr{
 		Port: 40000,
-		IP:   net.ParseIP("239.255.255.255"),
+		IP:   net.ParseIP("255.255.255.255"),
 	}
 	conn, err := net.DialUDP("udp", nil, &Baddr)
 	if err != nil {
