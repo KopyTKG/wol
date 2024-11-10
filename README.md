@@ -1,6 +1,6 @@
 # Wake on LAN (wol)
 
-Utility written with Go. It is my implementation of WakeOnLan and it's magic packet
+Utility written with C++. It is my implementation of WakeOnLan and it's magic packet
 
 
 ## Building
@@ -8,20 +8,31 @@ Utility written with Go. It is my implementation of WakeOnLan and it's magic pac
 ```bash
 git clone https://github.com/KopyTKG/wol.git
 cd wol
-go build
+make build
+./wol --version
+```
+## Installation
+
+```bash
+git clone https://github.com/KopyTKG/wol.git
+cd wol
+sudo make all 
+./wol --version
+```
+
+or
+
+```bash
+git clone https://github.com/KopyTKG/wol.git
+cd wol
+make build
+sudo make install 
 ./wol --version
 ```
 
 ## Usage
 
 ```bash
-wol -m xx:xx:xx:xx:xx:xx
+wol xx:xx:xx:xx:xx:xx
 ```
-
-or
-
-```bash
-wol --mac xx:xx:xx:xx:xx:xx
-```
-
 
